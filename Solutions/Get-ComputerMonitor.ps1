@@ -1,16 +1,49 @@
+function Get-ComputerMonitor{
+<#
+.SYNOPSIS
+    Gathers Information about your Computer's Monitors
+.DESCRIPTION
+
+.EXAMPLE
+    Get-Monitor
+.NOTES
+    Puzzle 1 of IronScripter
+#>
+    [CmdletBinding()]
+    param(
+        [string[]]$computer
+    )
+    begin {
+        $Session = New-CimSession -ComputerName $Computer
+        $Monitors = Get-CimInstance -ClassName WmiMonitorID -namespace root\wmi
+        $Computer = Get-CimInstance -ClassName CIM_ComputerSystem -CimSession $Session
+    }
+
+    process {
+        foreach($sesh in $Session){
+            $Computer = Get-CimInstance -ClassName CIM_ComputerSystem -CimSession $sesh
+            $Monitors = Get-CimInstance -ClassName WmiMonitorID -namespace root\wmi -CimSession $sesh
+
+        }
+        foreach($monitor in $Monitors){
+            [PSCustomObject]@{
+                "ComputerName" = $monitor.ComputerName;
+                "ComputerType" = $monitor.ComputerType;
+                "ComputerSerial" = $monitor.ComputerSerial;
+                "MonitorSerial" = $monitor.MonitorSerial;
+                "MonitorType" = $monitor.MonitorType
+            }
+
+        }
+    }
+
+    end {
+    }
+
 $Monitor = Get-WmiObject wmiMonitorID -namespace root\wmi
 $Computer = Get-WmiObject -Class Win32_ComputerSystem
 
-<#foreach($m in $Monitor){
-    [System.Management.Automation.PSCustomObject]{
-        "ComputerName" = $m.ComputerName;
-        "ComputerType" = $m.ComputerType;
-        "ComputerSerial" = $m.ComputerSerial;
-        "MonitorSerial" = $m.MonitorSerial;
-        "MonitorType" = $m.MonitorType
-    }
 
-}#>
 $Monitor | % {
     $psObject = New-Object PSObject
     $psObject | Add-Member -MemberType NoteProperty  -Name ComputerName -Value $PSItem.ComputerName
@@ -27,5 +60,5 @@ $Monitor | % {
     $psObject.MonitorType = ($_.UserFriendlyName -ne 0 | %{[char]$_}) -join ""
 
     $ps0bject
-
+    }
 }
