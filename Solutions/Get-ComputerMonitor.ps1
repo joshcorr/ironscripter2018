@@ -3,11 +3,21 @@ function Get-ComputerMonitor{
 .SYNOPSIS
     Gathers Information about your Computer's Monitors
 .DESCRIPTION
+    Gathers information about computer monitors using Get-CimInstance.
+    For multiple computers a CimSession is created and used for all cmdlets.
+    When the computers parameter is not used then it will execute without a cmisession
 
 .EXAMPLE
-    Get-Monitor
+    Get-ComputerMonitor
+
+    Returns the information for the current computer
+.EXAMPLE
+    Get-ComputerMonitor -Computer MyHost1,MyHost2
+
+    Returns the information about each individual host
 .NOTES
     Puzzle 1 of IronScripter
+    Author: Joshua Corrick
 #>
     [CmdletBinding()]
     param(
@@ -20,20 +30,27 @@ function Get-ComputerMonitor{
     )
     begin {
         If($PSBoundParameters.ContainsKey('computer')){
-            $nodes = Get-CimInstance -ClassName CIM_ComputerSystem -ComputerName $computer
+            Try{
+                $sessions = New-CimSession -ComputerName $computer -ErrorAction Stop
+            }
+            Catch{
+                Write-Output "Count not create a session for one or more computers in $computer"
+            }
         }
         else{
-            $nodes = Get-CimInstance -ClassName CIM_ComputerSystem
+            $sessions = 'localhost'
         }
 
     }
 
     process {
-        foreach($node in $nodes){
+        foreach($session in $sessions){
             If($PSBoundParameters.ContainsKey('computer')){
-                $monitors = Get-CimInstance -ClassName WmiMonitorID -namespace root\wmi -ComputerName $node
+                $node = Get-CimInstance -ClassName CIM_ComputerSystem -CimSession $session
+                $monitors = Get-CimInstance -ClassName WmiMonitorID -namespace root\wmi -CimSession $session
             }
             else{
+                $node = Get-CimInstance -ClassName CIM_ComputerSystem
                 $monitors = Get-CimInstance -ClassName WmiMonitorID -namespace root\wmi
             }
 
@@ -46,11 +63,9 @@ function Get-ComputerMonitor{
                     "MonitorType" = if($null -ne $monitor.UserFriendlyName){($monitor.UserFriendlyName -ne 0 | ForEach-Object {[char]$_}) -join "";}
                 }
             }
-
         }
     }
-
     end {
-        #Get-CimSession -ComputerName $Session.ComputerName | Remove-CimSession
+        Get-CimSession -ComputerName $sessions.ComputerName | Remove-CimSession
     }
 }
