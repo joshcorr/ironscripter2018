@@ -3,7 +3,7 @@ function Get-ComputerCapacity {
 .SYNOPSIS
     Gathers Information about your Computer's OS, Memory and Storage
 .DESCRIPTION
-    Gathers information about computer monitors using Get-CimInstance.
+    Gathers information about computer OS,Memory and Storage using Get-CimInstance.
     For multiple computers a CimSession is created and used for all cmdlets.
     When the computers parameter is not used then it will execute without a cmisession
 
@@ -12,7 +12,7 @@ function Get-ComputerCapacity {
 
     Returns the information for the current computer
 .EXAMPLE
-    Get-ComputerMonitor -Computer MyHost1,MyHost2
+    Get-ComputerCapacity -Computer MyHost1,MyHost2
 
     Returns the information about each individual host
 .NOTES
@@ -53,7 +53,7 @@ function Get-ComputerCapacity {
                 $disks = Get-CimInstance -Query "SELECT * FROM Win32_LogicalDisk"
             }
             $properties = (@{ "ComputerName" = $objOperatingSystem.CSName;
-            "OSName"  = $objOperatingSystem.Name;
+            "OSName"  = $objOperatingSystem.Caption;
             "Version" =  $objOperatingSystem.Version;
             "ServicePack" =  "$($objOperatingSystem.ServicePackMajorVersion).$($objOperatingSystem.ServicePackMinorVersion)";
             "OSManufacturer" = $objOperatingSystem.Manufacturer;
